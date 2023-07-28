@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html>
+    <html lang="en">
+<head>
+<title>Student Managementform</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet"
+href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<script
+src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script
+src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="http://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+</head>
+
+    <body>
+        <div class="container">
+            <div class="page-header text-center">
+                <h2>Student Enrollment Form </h2>
+            </div>
+            <form id="empform" method="get">
+                <div>
+                    <label>Roll-No : </label>
+                    <input type="number" id="roll" class="form-control" onchange="getStd()">
+                </div>
+                <div>
+                    <label>Full-Name : </label>
+                    <input type="text" id="name" class="form-control">
+                </div>
+                <div>
+                    <label>Class : </label>
+                    <input type="number" id="class1" class="form-control">
+                </div>
+                <div>
+                    <label>Birth-Date : </label>
+                    <input type="date" id="bday" class="form-control">
+                </div>
+                <div>
+                    <label>Address : </label>
+                    <input type="text" id="address" class="form-control">
+                </div>
+                <div>
+                    <label>Enrollment-Date : </label>
+                    <input type="date" id="edate" class="form-control">
+                </div>
+                <div>
+                    <nav class="nav navbar-default text-center" style="border:none">
+                        <button type="button" class="btn btn-lg btn-primary" id="save" onclick="saveData()">Save</button>
+                        <button type="button" class="btn btn-lg btn-primary" id="change" onclick="changeData()" disabled>Change</button>
+                        <button type="button" class="btn btn-lg btn-primary" id="reset" onclick="resetForm()" disabled>Reset</button>
+                    </nav>
+                </div>
+            </form>
+        </div>
+
+        <script>var jpdbBaseURL = "http://api.login2explore.com:5577";
+            var connToken = "90931398|-31949321857515793|90950353";
+
+            var jpdbIRL = "/api/irl";
+            var jpdbIML = "/api/iml";
+            var DBName = "StudentDB";
+            var RelationName = "Std-Rel";
+
+            $('#roll').focus();
+
+            function saveRecNo2LS(jsonObj) {
+                var lvData = JSON.parse(jsonObj.addressta);
+                localStorage.setItem('recno', lvData.rec_no);
+            }
+
+            function getStdIdAsJsonObj() {
+                var roll = $('#roll').val();
+                var jsonStr = {
+                    id: roll
+                };
+                return JSON.stringify(jsonStr);
+            }
+
+            function fillData(jsonObj) {
+                saveRecNo2LS(jsonObj);
+                var record = JSON.parse(jsonObj.address).record;
+                $("#name").val(record.name);
+                $("#class1").val(record.class1);
+                $("#bday").val(record.bday);
+                $("#address").val(record.address);
+                $("#edate").val(record.edate);
+            }
+
+            function resetForm() {
+                $("#roll").val('');
+                $("#name").val('');
+                $("#class1").val('');
+                $("#bday").val('');
+                $("#address").val('');
+                $("#edate").val('');
+                $("#roll").prop('disabled', false);
+                $("#save").prop('disabled', true);
+                $("#change").prop('disabled', true);
+                $("#reset").prop('disabled', true);
+                $("#roll").focus();
+            }
+
+            function valiaddressteData() {
+                var roll, name, class1, bday, address, edate;
+                roll = $('#roll').val();
+                name = $('#name').val();
+                class1 = $('#class1').val();
+                bday = $('#bday').val();
+                address = $('#address').val();
+                edate = $('#edate').val();
+
+                if (roll === '') {
+                    alert('Roll No missing');
+                    $('#roll').focus();
+                    return "";
+                }
+                if (name === '') {
+                    alert('Student Name missing');
+                    $('#name').focus();
+                    return "";
+                }
+                if (class1 === '') {
+                    alert('Class missing');
+                    $('#class1').focus();
+                    return "";
+                }
+                if (bday === '') {
+                    alert('Birthdate missing');
+                    $('#baddressy').focus();
+                    return "";
+                }
+                if (address === '') {
+                    alert('Address missing');
+                    $('#address').focus();
+                    return "";
+                }
+                if (edate === '') {
+                    alert('Enrollment Date missing');
+                    $('#edate').focus();
+                    return "";
+                }
+
+                var jsonStrObj = {
+                    id: roll,
+                    name: name,
+                    salary: class1,
+                    baddressy: bday,
+                    address: address,
+                    edateion: edate
+                };
+                return JSON.stringify(jsonStrObj);
+            }
+
+            function getStd() {
+                var stdIdJsonObj = getstdIdAsJsonObj();
+                var getRequest = createGET_BY_KEYRequest(connToken, DBName, RelationName, stdIdJsonObj);
+                jQuery.ajaxSetup({async: false});
+                var resJsonObj = executeCommandAtGivenBaseUrl(getRequest, jpdbBaseURL, jpdbIRL);
+                jQuery.ajaxSetup({async: true});
+                if (resJsonObj.status === 400) {
+                    $('#save').prop('disabled', false);
+                    $('#reset').prop('disabled', false);
+                    $('#name').focus();
+                } else if (resJsonObj.status === 200) {
+
+                    $('roll').prop('disabled', true);
+                    fillData(resJsonObj);
+
+                    $('#change').prop('disabled', false);
+                    $('#reset').prop('disabled', false);
+                    $('#name').focus();
+                }
+            }
+
+            function saveData() {
+                var jsonStrObj = valiaddressteData();
+                if (jsonStrObj === "") {
+                    return "";
+                }
+                var putRequest = createPUTRequest(connToken, jsonStrObj, DBName, RelationName);
+                jQuery.ajaxSetup({async: false});
+                var resJsonObj = executeCommandAtGivenBaseUrl(putRequest, jpdbBaseURL, jpdbIML);
+                jQuery.ajaxSetup({async: true});
+                resetForm();
+                $('#roll').focus();
+            }
+
+            function changeData() {
+                $('#change').prop('disabled', true);
+                jsonChg = valiaddressteData();
+                var upaddressteRequest = createUPDATERequest(connToken, jsonChg, DBName, RelationName, localStorage.getItem('recno'));
+                jQuery.ajaxSetup({async: false});
+                var resJsonObj = executeCommandAtGivenBaseUrl(upaddressteRequest, jpdbBaseURL, jpdbIML);
+                jQuery.ajaxSetup({async: true});
+                console.log(resJsonObj);
+                resetForm();
+                $('#roll').focus();
+            }
+
+        </script>
+  
+
+    </body>
+</html>
